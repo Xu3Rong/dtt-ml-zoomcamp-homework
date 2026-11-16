@@ -9,6 +9,7 @@ from typing import Any
 
 import numpy as np
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field, field_validator
 
 from features import (
@@ -88,6 +89,11 @@ class RentalListing(BaseModel):
     @classmethod
     def validate_furnished(cls, v: str) -> str:
         return _validate_choice(v, KNOWN_FURNISHED_VALUES, "furnished")
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health")
