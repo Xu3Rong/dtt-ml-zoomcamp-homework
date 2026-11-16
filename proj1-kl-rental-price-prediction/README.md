@@ -65,6 +65,7 @@ This project turns ~20k historical Mudah.my listings into a reproducible valuati
   * **Ridge:** `RM 469.57 ± 10.01` RMSE | `RM 282.37` MAE | `0.2225` Log-RMSE
 * **Untouched Holdout Test (`n = 3,521`):**
   * **Log-RMSE:** `0.1877` | **MAE:** `RM 222.82` | **Median AE:** `RM 122.74` | **Median % Error (MdAPE):** **`8.92%`** (`8.72%` KL / `9.02%` Selangor) | **RMSE:** `RM 520.31` (driven by luxury tail units > RM 4,000 and scarce `townhouse condo` listings).
+  * **Explained Variance (`R²`) & Tolerance Hit Rates:** `R² = 0.8240` (log-rent scale) / `0.7569` (raw MYR); **`54.7%`** of predictions fall within `±10%`, **`71.0%`** within `±15%`, **`81.9%`** within `±20%`, and **`67.1%`** within `±RM 200/month`.
 
 ---
 
