@@ -5,6 +5,7 @@
 **Live API (Swagger UI):** https://dtt-ml-zoomcamp-proj-kl-rental-price-api.onrender.com/docs *(Render Free tier: allow ~30–60s cold start after inactivity)*
 
 An end-to-end machine learning pipeline and containerized **FastAPI** web service that predicts fair monthly apartment rent (`monthly_rent` in **MYR**) across **Kuala Lumpur** and **Selangor**.
+note : I'm from the klang valley, hence the topic ;D
 
 ---
 
