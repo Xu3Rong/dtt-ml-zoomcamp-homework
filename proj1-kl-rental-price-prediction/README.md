@@ -1,7 +1,8 @@
 # Klang Valley (Kuala Lumpur & Selangor) Rental Price Prediction
 
 **Course:** DataTalksClub Machine Learning Zoomcamp 2026 — Midterm Project 1  
-**Author:** Chin Xue Rong (XR)
+**Author:** Chin Xue Rong (XR)  
+**Live API (Swagger UI):** https://dtt-ml-zoomcamp-proj-kl-rental-price-api.onrender.com/docs *(Render Free tier: allow ~30–60s cold start after inactivity)*
 
 An end-to-end machine learning pipeline and containerized **FastAPI** web service that predicts fair monthly apartment rent (`monthly_rent` in **MYR**) across **Kuala Lumpur** and **Selangor**.
 
@@ -69,6 +70,7 @@ This project turns ~20k historical Mudah.my listings into a reproducible valuati
 
 ```text
 proj1-kl-rental-price-prediction/
+├── assets/                               # Demo GIFs & deployment verification screenshots
 ├── data/
 │   └── mudah-apartment-kl-selangor.csv   # Committed dataset (~4.8 MB)
 ├── kl-price-pred.ipynb                   # Full EDA, H1-H3 tests, 7-model benchmark & CV
@@ -83,7 +85,7 @@ proj1-kl-rental-price-prediction/
 ├── requirements.txt                      # Exported pip-compatible lock list
 ├── .python-version                       # Python 3.14.3
 ├── .dockerignore
-└── Dockerfile                            # Containerized uvicorn service on port 9696
+└── Dockerfile                            # Containerized uvicorn service (default port 9696 / $PORT)
 ```
 
 ---
@@ -209,23 +211,72 @@ python smoke_test.py --http-only
 
 ## 7. Containerization (Docker)
 
-The [`Dockerfile`](Dockerfile) installs only the lean runtime dependencies via `uv sync --locked --no-dev` (plus `libgomp1` for XGBoost OpenMP) and serves the API on port `9696`:
+The [`Dockerfile`](Dockerfile) installs only the lean runtime dependencies via `uv sync --locked --no-dev` (plus `libgomp1` for XGBoost OpenMP) and reads `${PORT}` dynamically (`9696` default locally):
 
 ```bash
 # Build image
 docker build -t kl-rental-price:v1 .
 
-# Run container
-docker run --rm -p 9696:9696 kl-rental-price:v1
+# Run container (with an explicit container name)
+docker run --rm --name kl-rental-api -p 9696:9696 kl-rental-price:v1
 
 # Verify containerized endpoints in another terminal
 python smoke_test.py --http-only
 ```
 
+![Local Docker Container Status](assets/docker-container-status.png)
+
+*(Observed container footprint running live on Docker Desktop: `127.6 MiB` RAM.)*
+
 ---
 
-## 8. Limitations & Future Work
+## 8. Cloud Deployment (Render) & Live Demo
+
+The containerized API is deployed live on **Render** (Docker Web Service, Free tier, `$0/month` — well within the 512 MiB limit at ~128 MiB runtime memory):
+
+* **Live Swagger UI:** https://dtt-ml-zoomcamp-proj-kl-rental-price-api.onrender.com/docs *(root `/` redirects to `/docs`)*
+* **Health Check:** https://dtt-ml-zoomcamp-proj-kl-rental-price-api.onrender.com/health
+* **Cold-start note:** Render's free tier spins down after 15 minutes of inactivity, so the first request after idle takes **~30–60 seconds** to wake up automatically.
+
+### Cloud Setup & Verification
+
+* **Render Web Service Settings:** Repository `Xu3Rong/dtt-ml-zoomcamp-homework` | Branch `main` | Root Directory `proj1-kl-rental-price-prediction` | Runtime `Docker` (`Dockerfile` uses `CMD ["sh", "-c", "exec uvicorn predict:app --host 0.0.0.0 --port ${PORT}"]` to bind Render's injected `$PORT`).
+* **Automated Cloud Smoke Test (`GET /health`, KL & Selangor `POST /predict`, and 6 `HTTP 422` validation checks):**
+  ```bash
+  python smoke_test.py --http-only --url https://dtt-ml-zoomcamp-proj-kl-rental-price-api.onrender.com
+  ```
+
+### Live Swagger UI Walkthrough
+
+![End-to-end Swagger API walkthrough](assets/demo-walkthrough.gif)
+
+### Cloud Request & Render Deploy Verification
+
+![Live Render POST /predict curl and 200 OK response](assets/render-curl-response.png)
+
+<details>
+<summary>More demo GIFs & deployment screenshots (KL condo, Selangor imputed apartment, 422 validation guard, Render & local docs)</summary>
+
+#### Test 1 — Prime KL Mont Kiara Condominium (`200 OK`)
+![KL Mont Kiara prediction demo](assets/demo-test1-kl-condo.gif)
+
+#### Test 2 — Selangor Budget Apartment with Missing Optional Fields (`200 OK`, `"other"` area & median year imputed)
+![Selangor imputed prediction demo](assets/demo-test2-selangor-imputed.gif)
+
+#### Test 3 — Strict Schema Guardrail Rejecting Unsupported Region (`HTTP 422`)
+![Strict 422 validation demo](assets/demo-test3-validation-422.gif)
+
+#### Render Deployment Logs & Local Container Docs
+![Render deploy status](assets/render-deploy-status.png)
+![Render Swagger docs](assets/render-swagger-docs.png)
+![Local Docker Swagger docs](assets/local-swagger-docs.png)
+
+</details>
+
+---
+
+## 9. Limitations & Future Work
 
 * **Omitted Unstructured Building Identity (`prop_name`):** Intentionally excluded so the API stays generalizable without requiring exact condominium spelling lookups; however, luxury/boutique buildings inside the same township command different rents, contributing to wider residuals above `RM 4,000`.
 * **Missing Micro-Attributes:** The source dataset does not record floor level, interior renovation quality, or exact walking distance to LRT/MRT stations.
-* **Future Improvements:** Out-of-fold target encoding for top condominium developments, quantile/prediction-interval outputs (`p10`–`p90`), and cloud deployment (e.g., Render / Google Cloud Run).
+* **Future Improvements:** Out-of-fold target encoding for top condominium developments, quantile/prediction-interval outputs (`p10`–`p90`), and a custom frontend UI consuming the `/predict` endpoint.

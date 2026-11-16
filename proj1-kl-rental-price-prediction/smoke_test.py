@@ -122,16 +122,16 @@ def check_offline_artifact() -> None:
 
 def check_http_service(base_url: str) -> None:
     """Verify live FastAPI /health and /predict endpoints."""
-    health_resp = requests.get(f"{base_url}/health", timeout=10)
+    health_resp = requests.get(f"{base_url}/health", timeout=60)
     health_resp.raise_for_status()
     health_data = health_resp.json()
     assert health_data["status"] == "ok"
 
-    resp_kl = requests.post(f"{base_url}/predict", json=SAMPLE_KL_CONDO, timeout=10)
+    resp_kl = requests.post(f"{base_url}/predict", json=SAMPLE_KL_CONDO, timeout=60)
     resp_kl.raise_for_status()
     data_kl = resp_kl.json()
 
-    resp_sel = requests.post(f"{base_url}/predict", json=SAMPLE_SELANGOR_APARTMENT, timeout=10)
+    resp_sel = requests.post(f"{base_url}/predict", json=SAMPLE_SELANGOR_APARTMENT, timeout=60)
     resp_sel.raise_for_status()
     data_sel = resp_sel.json()
 
@@ -142,7 +142,7 @@ def check_http_service(base_url: str) -> None:
     assert data_kl["predicted_monthly_rent_myr"] > data_sel["predicted_monthly_rent_myr"]
 
     for label, bad_payload in INVALID_CASES:
-        bad_resp = requests.post(f"{base_url}/predict", json=bad_payload, timeout=10)
+        bad_resp = requests.post(f"{base_url}/predict", json=bad_payload, timeout=30)
         assert bad_resp.status_code == 422, f"{label} expected 422, got {bad_resp.status_code}"
 
     print(f"GET /health OK -> {health_data}")
